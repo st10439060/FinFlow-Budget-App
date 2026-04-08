@@ -1,37 +1,46 @@
-package com.finflow.app.data.database
+package com.finflow.app.data.local.database
 
+import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
-import android.content.Context
-import com.finflow.app.data.dao.CategoryDao
-import com.finflow.app.data.dao.ExpenseDao
-import com.finflow.app.data.entity.Category
-import com.finflow.app.data.entity.Expense
-import com.finflow.app.data.utils.DateConverter
+import com.finflow.app.data.local.dao.*
+import com.finflow.app.data.local.entities.*
 
 @Database(
-    entities = [Expense::class, Category::class],
-    version = 1,
+    entities = [
+        User::class,
+        Category::class,
+        Expense::class,
+        Budget::class,
+        Achievement::class,
+        UserProgress::class
+    ],
+    version = 2,
     exportSchema = false
 )
-@TypeConverters(DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun expenseDao(): ExpenseDao
+
+    abstract fun userDao(): UserDao
     abstract fun categoryDao(): CategoryDao
+    abstract fun expenseDao(): ExpenseDao
+    abstract fun budgetDao(): BudgetDao
+    abstract fun achievementDao(): AchievementDao
+    abstract fun userProgressDao(): UserProgressDao
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        fun getInstance(context: Context): AppDatabase {
+        fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "finflow_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

@@ -1,0 +1,48 @@
+package com.finflow.app.ui.adapters
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.finflow.app.R
+import com.finflow.app.data.local.entities.Expense
+import com.finflow.app.utils.DateUtils
+
+class ExpenseAdapter(
+    private val expenses: List<Expense>,
+    private val onExpenseClick: (Expense) -> Unit
+) : RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder>() {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExpenseViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_expense, parent, false)
+        return ExpenseViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
+        val expense = expenses[position]
+        holder.bind(expense)
+        holder.itemView.setOnClickListener { onExpenseClick(expense) }
+    }
+
+    override fun getItemCount() = expenses.size
+
+    class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvEmoji: TextView = itemView.findViewById(R.id.tv_expense_emoji)
+        private val tvDescription: TextView = itemView.findViewById(R.id.tv_expense_description)
+        private val tvCategory: TextView = itemView.findViewById(R.id.tv_expense_category)
+        private val tvDate: TextView = itemView.findViewById(R.id.tv_expense_date)
+        private val tvAmount: TextView = itemView.findViewById(R.id.tv_expense_amount)
+
+        fun bind(expense: Expense) {
+            tvEmoji.text = "💰"
+            tvDescription.text = expense.description
+            tvCategory.text = "ID: ${expense.categoryId}"
+            tvDate.text = DateUtils.formatDate(expense.date, "dd MMM")
+            tvAmount.text = DateUtils.formatCurrency(expense.amount)
+        }
+    }
+}

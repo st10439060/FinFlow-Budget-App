@@ -1,4 +1,4 @@
-package com.finflow.app.data.utils
+package com.finflow.app.utils
 
 import androidx.room.TypeConverter
 import java.util.Date
