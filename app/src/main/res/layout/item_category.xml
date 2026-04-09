@@ -1,0 +1,15 @@
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="10dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical">
+        <!--  Emoji  -->
+        <TextView android:id="@+id/tv_category_emoji" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🏷️" android:textSize="30sp" android:layout_marginEnd="12dp"/>
+        <!--  Name and description  -->
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+            <TextView android:id="@+id/tv_category_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Category Name" android:textSize="16sp" android:textStyle="bold" android:textColor="#212121"/>
+            <TextView android:id="@+id/tv_category_description" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="No description" android:textSize="13sp" android:textColor="#757575"/>
+        </LinearLayout>
+        <!--  Edit Button  -->
+        <ImageButton android:id="@+id/btn_edit_category" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@android:drawable/ic_menu_edit" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="Edit category" android:layout_marginEnd="8dp"/>
+        <!--  Delete Button  -->
+        <ImageButton android:id="@+id/btn_delete_category" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@android:drawable/ic_menu_delete" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="Delete category"/>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

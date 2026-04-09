@@ -2,6 +2,7 @@ package com.finflow.app.ui.fragments
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
@@ -20,7 +21,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -28,6 +28,7 @@ import com.finflow.app.R
 import com.finflow.app.data.local.database.AppDatabase
 import com.finflow.app.data.local.entities.Expense
 import com.finflow.app.ui.viewmodels.ExpenseViewModel
+import androidx.fragment.app.viewModels
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -36,6 +37,7 @@ import java.util.*
 /**
  * Fragment for adding new expenses
  * Includes date, start/end times, description, category, and photo
+ * UPDATED BY KOBE: Added gallery photo picker option
  */
 class AddExpenseFragment : Fragment() {
 
@@ -58,13 +60,12 @@ class AddExpenseFragment : Fragment() {
     private var photoUri: Uri? = null
     private var photoPath: String? = null
     private var selectedCategoryId: Long = 0
-    private var currentUserId: Long = 1L // Default user, set from SharedPreferences in real app
+    private var currentUserId: Long = 1L
 
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
     // Camera permission launcher
-    private val requestPermissionLauncher = registerForActivityResult(
+    private val requestCameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
@@ -83,6 +84,22 @@ class AddExpenseFragment : Fragment() {
                 ivPhotoPreview.setImageURI(uri)
                 ivPhotoPreview.visibility = View.VISIBLE
                 photoPath = uri.path
+                android.util.Log.d("AddExpenseFragment", "Photo taken, path: $photoPath")
+            }
+        }
+    }
+
+    // ADDED BY KOBE - Gallery launcher
+    private val pickImageLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                photoUri = uri
+                ivPhotoPreview.setImageURI(uri)
+                ivPhotoPreview.visibility = View.VISIBLE
+                photoPath = uri.toString()
+                android.util.Log.d("AddExpenseFragment", "Photo picked from gallery, uri: $photoPath")
             }
         }
     }
@@ -104,8 +121,6 @@ class AddExpenseFragment : Fragment() {
         setupCategoryDropdown()
         setupPhotoCapture()
         setupSaveButton()
-
-        // Load user ID from preferences
         loadCurrentUserId()
     }
 
@@ -121,7 +136,6 @@ class AddExpenseFragment : Fragment() {
         btnAddPhoto = view.findViewById(R.id.btn_add_photo)
         btnSave = view.findViewById(R.id.btn_save)
 
-        // Set default date to today
         etDate.setText(dateFormat.format(selectedDate.time))
     }
 
@@ -185,18 +199,33 @@ class AddExpenseFragment : Fragment() {
         }
     }
 
+    /**
+     * UPDATED BY KOBE - Now shows a dialog to choose between Camera and Gallery
+     */
     private fun setupPhotoCapture() {
         btnAddPhoto.setOnClickListener {
-            when {
-                ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.CAMERA
-                ) == PackageManager.PERMISSION_GRANTED -> {
-                    openCamera()
+            // Show a dialog asking Camera or Gallery
+            AlertDialog.Builder(requireContext())
+                .setTitle("Add Photo")
+                .setItems(arrayOf("Take Photo (Camera)", "Choose from Gallery")) { _, which ->
+                    when (which) {
+                        0 -> checkCameraPermissionAndOpen()
+                        1 -> openGallery()
+                    }
                 }
-                else -> {
-                    requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-                }
+                .show()
+        }
+    }
+
+    private fun checkCameraPermissionAndOpen() {
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                openCamera()
+            }
+            else -> {
+                requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
         }
     }
@@ -213,6 +242,13 @@ class AddExpenseFragment : Fragment() {
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
         takePictureLauncher.launch(intent)
+    }
+
+    // ADDED BY KOBE - Open gallery to pick an image
+    private fun openGallery() {
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        intent.type = "image/*"
+        pickImageLauncher.launch(intent)
     }
 
     private fun createImageFile(): File {
@@ -243,7 +279,7 @@ class AddExpenseFragment : Fragment() {
                 return false
             }
             selectedCategoryId == 0L -> {
-                Toast.makeText(requireContext(), "Please select category", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Please select a category", Toast.LENGTH_SHORT).show()
                 return false
             }
             startTime.isEmpty() -> {
@@ -278,8 +314,8 @@ class AddExpenseFragment : Fragment() {
         lifecycleScope.launch {
             val db = AppDatabase.getDatabase(requireContext())
             db.expenseDao().insertExpense(expense)
-
-            Toast.makeText(requireContext(), "Expense saved successfully", Toast.LENGTH_SHORT).show()
+            android.util.Log.d("AddExpenseFragment", "Saved expense: $description, amount: $amount")
+            Toast.makeText(requireContext(), "Expense saved successfully!", Toast.LENGTH_SHORT).show()
             clearForm()
         }
     }

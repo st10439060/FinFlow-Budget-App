@@ -1,0 +1,11 @@
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#F5F5F5">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Categories" android:textSize="24sp" android:textStyle="bold" android:textColor="#212121" android:layout_marginBottom="16dp"/>
+        <!--  Shown when there are no categories  -->
+        <TextView android:id="@+id/tv_empty_categories" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="No categories yet. Tap + to add one!" android:textSize="16sp" android:textColor="#9E9E9E" android:gravity="center" android:layout_marginTop="80dp" android:visibility="gone"/>
+        <!--  List of categories  -->
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/rv_categories" android:layout_width="match_parent" android:layout_height="match_parent"/>
+    </LinearLayout>
+    <!--  FAB to add a new category  -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@+id/fab_add_category" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="16dp" android:contentDescription="Add Category" android:src="@android:drawable/ic_input_add" app:layout_anchor="@id/rv_categories" app:layout_anchorGravity="bottom|end"/>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

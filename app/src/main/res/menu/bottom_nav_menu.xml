@@ -3,17 +3,21 @@
     <item
         android:id="@+id/dashboardFragment"
         android:icon="@android:drawable/ic_menu_view"
-        android:title="@string/nav_home" />
+        android:title="@string/nav_home"/>
+    <item
+        android:id="@+id/categoriesFragment"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        android:title="Categories"/>
     <item
         android:id="@+id/reportsFragment"
         android:icon="@android:drawable/ic_menu_report_image"
-        android:title="@string/nav_reports" />
+        android:title="@string/nav_reports"/>
     <item
         android:id="@+id/goalsFragment"
         android:icon="@android:drawable/ic_menu_agenda"
-        android:title="@string/nav_goals" />
+        android:title="@string/nav_goals"/>
     <item
         android:id="@+id/profileFragment"
         android:icon="@android:drawable/ic_menu_myplaces"
-        android:title="@string/nav_profile" />
+        android:title="@string/nav_profile"/>
 </menu>
