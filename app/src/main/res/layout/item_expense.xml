@@ -66,7 +66,18 @@
                     android:text="10 Mar"
                     android:textSize="12sp"
                     android:textColor="@color/text_secondary" />
+
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_receipt_indicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Tap to view receipt"
+                android:textColor="@color/accent_blue"
+                android:textSize="12sp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <TextView

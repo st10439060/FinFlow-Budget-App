@@ -29,7 +29,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Select Period"
+                android:text="Filter by Date"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="12dp" />
@@ -71,14 +71,13 @@
                         android:clickable="true"
                         android:inputType="none" />
                 </com.google.android.material.textfield.TextInputLayout>
-
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_load_reports"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Load Expenses"
+                android:text="Apply Filter"
                 android:layout_marginTop="12dp" />
 
         </LinearLayout>
@@ -92,13 +91,20 @@
         android:text="Total: R 0.00"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="@color/green_primary"
+        android:textColor="@color/green_primary" />
+
+    <TextView
+        android:id="@+id/tv_expense_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0 expense(s) in selected date range"
+        android:textColor="@color/text_secondary"
         android:layout_marginBottom="12dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Expenses by Category"
+        android:text="Total per Category"
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp" />
@@ -112,7 +118,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="All Expenses"
+        android:text="Expense List"
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp" />
