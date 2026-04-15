@@ -9,10 +9,15 @@ import com.finflow.app.R
 import com.finflow.app.data.local.entities.Expense
 import com.finflow.app.utils.DateUtils
 
+/**
+ * RecyclerView adapter for displaying a list of Expense items.
+ * Each row shows the expense description, date, amount, and a camera icon
+ * if a receipt photo is attached to the entry.
+ *
+ * [onExpenseClick] is called when the user taps an item (e.g., to view its photo).
+ */
 class ExpenseAdapter(
     private val expenses: List<Expense>,
-    private val categoryLabels: Map<Long, String> = emptyMap(),
-    private val categoryEmojis: Map<Long, String> = emptyMap(),
     private val onExpenseClick: (Expense) -> Unit
 ) : RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder>() {
 
@@ -24,11 +29,7 @@ class ExpenseAdapter(
 
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         val expense = expenses[position]
-        holder.bind(
-            expense = expense,
-            categoryLabel = categoryLabels[expense.categoryId] ?: "Uncategorised",
-            categoryEmoji = categoryEmojis[expense.categoryId] ?: "💰"
-        )
+        holder.bind(expense)
         holder.itemView.setOnClickListener { onExpenseClick(expense) }
     }
 
@@ -40,15 +41,20 @@ class ExpenseAdapter(
         private val tvCategory: TextView = itemView.findViewById(R.id.tv_expense_category)
         private val tvDate: TextView = itemView.findViewById(R.id.tv_expense_date)
         private val tvAmount: TextView = itemView.findViewById(R.id.tv_expense_amount)
-        private val tvReceiptIndicator: TextView = itemView.findViewById(R.id.tv_receipt_indicator)
 
-        fun bind(expense: Expense, categoryLabel: String, categoryEmoji: String) {
-            tvEmoji.text = categoryEmoji
+        /**
+         * Binds an Expense to this ViewHolder.
+         * Shows a 📷 camera emoji when the expense has a stored photo path,
+         * so the user can see at a glance which entries have receipts.
+         */
+        fun bind(expense: Expense) {
+            // Show camera emoji if a receipt photo was saved, otherwise default money bag
+            tvEmoji.text = if (!expense.photoPath.isNullOrEmpty()) "📷" else "💰"
             tvDescription.text = expense.description
-            tvCategory.text = categoryLabel
-            tvDate.text = DateUtils.formatDate(expense.date, "dd MMM yyyy")
+            // Category is shown as "Category #ID" until a join query fetches the name
+            tvCategory.text = "Category #${expense.categoryId}"
+            tvDate.text = DateUtils.formatDate(expense.date, "dd MMM")
             tvAmount.text = DateUtils.formatCurrency(expense.amount)
-            tvReceiptIndicator.visibility = if (expense.photoPath.isNullOrBlank()) View.GONE else View.VISIBLE
         }
     }
 }

@@ -18,23 +18,15 @@
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:id="@+id/tv_goal_month"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Goals for April 2026"
-            android:textColor="@color/text_secondary"
             android:layout_marginBottom="24dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_category"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Category"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
             <AutoCompleteTextView
                 android:id="@+id/et_category"
@@ -120,14 +112,7 @@
             android:layout_height="wrap_content"
             android:max="30000"
             android:progress="0"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Set a minimum, a maximum, and your target spend for the current month."
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="32dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_save_goal"
