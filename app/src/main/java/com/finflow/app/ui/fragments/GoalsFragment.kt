@@ -17,6 +17,7 @@ import com.google.android.material.button.MaterialButton
 import com.finflow.app.R
 import com.finflow.app.data.local.database.AppDatabase
 import com.finflow.app.data.local.entities.Budget
+import com.finflow.app.data.local.entities.Category
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -89,25 +90,28 @@ class GoalsFragment : Fragment() {
         btnSaveGoal = view.findViewById(R.id.btn_save_goal)
     }
 
+    private var categoryList: List<Category> = emptyList()
+
     /**
-     * Loads all categories for this user from RoomDB and populates the dropdown.
-     * The selected category's ID is stored for use when saving the budget.
+     * Observes the live Flow of categories for the current user only.
+     * Fixes the duplicate-category bug caused by the old unfiltered getAllCategories() call.
      */
     private fun setupCategoryDropdown() {
+        val db = AppDatabase.getDatabase(requireContext())
         lifecycleScope.launch {
-            val db = AppDatabase.getDatabase(requireContext())
-            val categories = db.categoryDao().getAllCategories()
+            db.categoryDao().getAllCategories(currentUserId).collect { categories ->
+                Log.d(TAG, "Loaded ${categories.size} categories for userId=$currentUserId")
+                categoryList = categories
 
-            Log.d(TAG, "Loaded ${categories.size} categories for dropdown")
-
-            val categoryNames = categories.map { "${it.emoji} ${it.name}" }
-            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, categoryNames)
-            etCategory.setAdapter(adapter)
-
-            etCategory.setOnItemClickListener { _, _, position, _ ->
-                selectedCategoryId = categories[position].id
-                Log.d(TAG, "Category selected: ${categories[position].name} (id=$selectedCategoryId)")
+                val categoryNames = categories.map { "${it.emoji} ${it.name}".trim() }
+                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, categoryNames)
+                etCategory.setAdapter(adapter)
             }
+        }
+
+        etCategory.setOnItemClickListener { _, _, position, _ ->
+            selectedCategoryId = categoryList[position].id
+            Log.d(TAG, "Category selected: ${categoryList[position].name} (id=$selectedCategoryId)")
         }
     }
 

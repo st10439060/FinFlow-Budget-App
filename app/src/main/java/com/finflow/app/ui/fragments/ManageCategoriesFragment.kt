@@ -109,16 +109,9 @@ class ManageCategoriesFragment : Fragment() {
         }
     }
 
-    /**
-     * Validates the user-entered category name and emoji before saving.
-     */
     private fun validateInputs(name: String, emoji: String): Boolean {
         if (name.isEmpty()) {
             Toast.makeText(requireContext(), "Please enter a category name", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (emoji.isEmpty()) {
-            Toast.makeText(requireContext(), "Please enter an emoji", Toast.LENGTH_SHORT).show()
             return false
         }
         return true
@@ -134,7 +127,7 @@ class ManageCategoriesFragment : Fragment() {
 
                 val category = Category(
                     name = name,
-                    emoji = emoji,
+                    emoji = emoji.ifEmpty { "📁" },
                     color = "#4CAF50",
                     description = description,
                     userId = currentUserId,
