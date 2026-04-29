@@ -1,0 +1,80 @@
+<resources>
+    <string name="app_name">FinFlow</string>
+    <string name="tagline">Master Your Money, Effortlessly</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_goals">Goals</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Authentication -->
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="create_account">Create Account</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="already_have_account">Already have an account? Login</string>
+    <string name="dont_have_account">Don\'t have an account? Sign Up</string>
+
+    <!-- Dashboard -->
+    <string name="monthly_budget">Monthly Budget</string>
+    <string name="spent">Spent</string>
+    <string name="remaining">Remaining</string>
+    <string name="budget_categories">Budget Categories</string>
+    <string name="add_expense">Add Expense</string>
+    <string name="overspending">Over Budget!</string>
+
+    <!-- Expenses -->
+    <string name="amount">Amount</string>
+    <string name="description">Description</string>
+    <string name="category">Category</string>
+    <string name="date">Date</string>
+    <string name="notes">Notes (Optional)</string>
+    <string name="receipt_photo">Receipt Photo</string>
+    <string name="add_receipt">Add Receipt</string>
+    <string name="payment_method">Payment Method</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+
+    <!-- Categories -->
+    <string name="categories">Categories</string>
+    <string name="add_category">Add Category</string>
+    <string name="category_name">Category Name</string>
+    <string name="category_emoji">Emoji</string>
+    <string name="category_color">Color</string>
+    <string name="category_description">Description</string>
+
+    <!-- Budget -->
+    <string name="set_budget">Set Budget</string>
+    <string name="total_budget">Total Budget</string>
+    <string name="category_budgets">Category Budgets</string>
+
+    <!-- Reports -->
+    <string name="spending_overview">Spending Overview</string>
+    <string name="total_spent">Total Spent</string>
+    <string name="transactions">Transactions</string>
+    <string name="average_per_day">Avg Per Day</string>
+    <string name="this_month">This Month</string>
+    <string name="last_month">Last Month</string>
+    <string name="custom_range">Custom Range</string>
+
+    <!-- Achievements -->
+    <string name="achievements">Achievements</string>
+    <string name="current_streak">Current Streak</string>
+    <string name="days">days</string>
+    <string name="total_points">Total Points</string>
+    <string name="level">Level</string>
+    <string name="badges_earned">Badges Earned</string>
+
+    <!-- Common -->
+    <string name="loading">Loading…</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
+    <string name="confirm">Confirm</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+</resources>
