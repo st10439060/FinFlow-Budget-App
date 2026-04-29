@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,10 +23,12 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.finflow.app.R
 import com.finflow.app.data.local.database.AppDatabase
+import com.finflow.app.data.local.entities.Category
 import com.finflow.app.data.local.entities.Expense
 import com.finflow.app.ui.viewmodels.ExpenseViewModel
 import kotlinx.coroutines.launch
@@ -39,7 +42,7 @@ import java.util.*
  */
 class AddExpenseFragment : Fragment() {
 
-    private val expenseViewModel: ExpenseViewModel by viewModels()
+    private val TAG = "AddExpenseFragment"
 
     private lateinit var etAmount: TextInputEditText
     private lateinit var etDescription: TextInputEditText
@@ -98,15 +101,15 @@ class AddExpenseFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Load userId before anything that depends on it
+        loadCurrentUserId()
+
         initializeViews(view)
         setupDatePicker()
         setupTimePickers()
         setupCategoryDropdown()
         setupPhotoCapture()
         setupSaveButton()
-
-        // Load user ID from preferences
-        loadCurrentUserId()
     }
 
     private fun initializeViews(view: View) {
@@ -170,18 +173,33 @@ class AddExpenseFragment : Fragment() {
         }
     }
 
+    // Holds the latest category list so the click listener can always index into it correctly
+    private var categoryList: List<Category> = emptyList()
+
+    /**
+     * Observes the categories Flow for the current user so newly added categories
+     * appear immediately without needing to leave and re-enter the screen.
+     */
     private fun setupCategoryDropdown() {
+        val db = AppDatabase.getDatabase(requireContext())
         lifecycleScope.launch {
-            val db = AppDatabase.getDatabase(requireContext())
-            val categories = db.categoryDao().getAllCategories()
+            db.categoryDao().getAllCategories(currentUserId).collect { categories ->
+                Log.d(TAG, "Category list updated: ${categories.size} items for userId=$currentUserId")
+                categoryList = categories
 
-            val categoryNames = categories.map { "${it.emoji} ${it.name}" }
-            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, categoryNames)
-            etCategory.setAdapter(adapter)
-
-            etCategory.setOnItemClickListener { _, _, position, _ ->
-                selectedCategoryId = categories[position].id
+                val categoryNames = categories.map { "${it.emoji} ${it.name}" }
+                val adapter = ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_dropdown_item_1line,
+                    categoryNames
+                )
+                etCategory.setAdapter(adapter)
             }
+        }
+
+        etCategory.setOnItemClickListener { _, _, position, _ ->
+            selectedCategoryId = categoryList[position].id
+            Log.d(TAG, "Category selected: id=$selectedCategoryId")
         }
     }
 
@@ -278,9 +296,11 @@ class AddExpenseFragment : Fragment() {
         lifecycleScope.launch {
             val db = AppDatabase.getDatabase(requireContext())
             db.expenseDao().insertExpense(expense)
+            Log.d(TAG, "Expense saved, navigating to dashboard")
 
             Toast.makeText(requireContext(), "Expense saved successfully", Toast.LENGTH_SHORT).show()
-            clearForm()
+            // Navigate back to Dashboard after saving
+            findNavController().navigate(R.id.action_addExpense_to_dashboard)
         }
     }
 
