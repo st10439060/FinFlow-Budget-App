@@ -19,6 +19,8 @@ FinFlow is an Android expense tracking app that helps users manage their finance
 - Room Database
 - GitHub Actions CI/CD
 - Material Design
+- JUnit4 for unit testing
+
 
 ### Team Members & Responsibilities
 | Person | Responsibility |
@@ -29,14 +31,7 @@ FinFlow is an Android expense tracking app that helps users manage their finance
 | Person 4 | Monthly goals (min/max), Expense list with date filter, View receipt photo, Total per category report |
 | Person 5 | UI polish, integration, bug fixing, APK build, demo video |
 
-### Setup Instructions
-1. Clone the repository
-2. Open in Android Studio (Ladybug or later)
-3. Sync Gradle
-4. Run on emulator or physical device (min SDK 24)
 
 ### GitHub Actions
 This project uses GitHub Actions for automated builds. Every push to main/master triggers a build and test run.
 
-### License
-Academic project – no commercial use.
