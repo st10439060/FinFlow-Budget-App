@@ -9,16 +9,10 @@ import com.finflow.app.R
 import com.finflow.app.data.local.entities.Expense
 import com.finflow.app.utils.DateUtils
 
-/**
- * RecyclerView adapter for displaying a list of Expense items.
- * Each row shows the expense description, date, amount, and a camera icon
- * if a receipt photo is attached to the entry.
- *
- * [onExpenseClick] is called when the user taps an item (e.g., to view its photo).
- */
 class ExpenseAdapter(
     private val expenses: List<Expense>,
-    private val onExpenseClick: (Expense) -> Unit
+    private val onExpenseClick: (Expense) -> Unit,
+    private val onExpenseLongClick: ((Expense) -> Unit)? = null
 ) : RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExpenseViewHolder {
@@ -31,6 +25,12 @@ class ExpenseAdapter(
         val expense = expenses[position]
         holder.bind(expense)
         holder.itemView.setOnClickListener { onExpenseClick(expense) }
+        onExpenseLongClick?.let { callback ->
+            holder.itemView.setOnLongClickListener {
+                callback(expense)
+                true
+            }
+        }
     }
 
     override fun getItemCount() = expenses.size
@@ -42,16 +42,9 @@ class ExpenseAdapter(
         private val tvDate: TextView = itemView.findViewById(R.id.tv_expense_date)
         private val tvAmount: TextView = itemView.findViewById(R.id.tv_expense_amount)
 
-        /**
-         * Binds an Expense to this ViewHolder.
-         * Shows a 📷 camera emoji when the expense has a stored photo path,
-         * so the user can see at a glance which entries have receipts.
-         */
         fun bind(expense: Expense) {
-            // Show camera emoji if a receipt photo was saved, otherwise default money bag
             tvEmoji.text = if (!expense.photoPath.isNullOrEmpty()) "📷" else "💰"
             tvDescription.text = expense.description
-            // Category is shown as "Category #ID" until a join query fetches the name
             tvCategory.text = "Category #${expense.categoryId}"
             tvDate.text = DateUtils.formatDate(expense.date, "dd MMM")
             tvAmount.text = DateUtils.formatCurrency(expense.amount)
