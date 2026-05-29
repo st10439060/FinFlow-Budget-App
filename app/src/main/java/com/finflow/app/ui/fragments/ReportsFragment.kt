@@ -3,6 +3,7 @@ package com.finflow.app.ui.fragments
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -16,6 +17,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.components.LimitLine
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.finflow.app.R
@@ -31,12 +39,14 @@ import java.util.*
 /**
  * ReportsFragment - shows expenses for a user-selected date range.
  * Displays:
+ *  - Bar chart of amount spent per category with min/max goal limit lines
  *  - Total amount spent in the period
- *  - Per-category spending breakdown
+ *  - Per-category spending breakdown (RecyclerView)
  *  - Full expense list; tapping an entry with a photo opens the photo
  *
- * Satisfies: "view the list of all expense entries created during a user-selectable period"
- * and "view the total amount of money spent on each category during a user-selectable period"
+ * Satisfies Part 3 requirements:
+ *  - "view a graph showing the amount spent per category over a user-selectable period"
+ *  - "graph must also display the minimum and maximum goals"
  */
 class ReportsFragment : Fragment() {
 
@@ -46,6 +56,7 @@ class ReportsFragment : Fragment() {
     private lateinit var etEndDate: TextInputEditText
     private lateinit var btnLoadReports: MaterialButton
     private lateinit var tvTotalExpenses: TextView
+    private lateinit var barChart: BarChart
     private lateinit var rvCategoryTotals: RecyclerView
     private lateinit var rvExpenses: RecyclerView
 
@@ -73,6 +84,7 @@ class ReportsFragment : Fragment() {
         initializeViews(view)
         setupDatePickers()
         setupRecyclerViews()
+        setupBarChart()
 
         btnLoadReports.setOnClickListener {
             loadExpenseReports()
@@ -102,6 +114,7 @@ class ReportsFragment : Fragment() {
         etEndDate = view.findViewById(R.id.et_end_date)
         btnLoadReports = view.findViewById(R.id.btn_load_reports)
         tvTotalExpenses = view.findViewById(R.id.tv_total_expenses)
+        barChart = view.findViewById(R.id.bar_chart)
         rvCategoryTotals = view.findViewById(R.id.rv_category_totals)
         rvExpenses = view.findViewById(R.id.rv_expenses)
     }
@@ -131,17 +144,44 @@ class ReportsFragment : Fragment() {
         rvCategoryTotals.layoutManager = LinearLayoutManager(requireContext())
     }
 
+    /** Configures the BarChart appearance before data is loaded. */
+    private fun setupBarChart() {
+        barChart.apply {
+            description.isEnabled = false
+            setDrawGridBackground(false)
+            setDrawBarShadow(false)
+            setPinchZoom(false)
+            setScaleEnabled(true)
+            animateY(600)
+            legend.isEnabled = true
+
+            xAxis.apply {
+                position = XAxis.XAxisPosition.BOTTOM
+                granularity = 1f
+                setDrawGridLines(false)
+                textColor = Color.parseColor("#212121")
+                textSize = 10f
+            }
+
+            axisLeft.apply {
+                setDrawGridLines(true)
+                textColor = Color.parseColor("#212121")
+                axisMinimum = 0f
+            }
+
+            axisRight.isEnabled = false
+        }
+    }
+
     /**
-     * Loads expenses from RoomDB for the selected date range and builds:
-     *  1. Category total summaries
-     *  2. Full expense list with click-to-view-photo support
+     * Loads expenses from RoomDB for the selected date range, builds the bar chart with
+     * per-category spending bars and min/max goal limit lines, and shows the expense list.
      */
     private fun loadExpenseReports() {
         lifecycleScope.launch {
             try {
                 val db = AppDatabase.getDatabase(requireContext())
 
-                // Fetch expenses in the selected date range for this user
                 val expenses = db.expenseDao().getExpensesByDateRange(
                     currentUserId,
                     startDateMillis,
@@ -150,33 +190,118 @@ class ReportsFragment : Fragment() {
 
                 Log.d(TAG, "Loaded ${expenses.size} expenses for range $startDateMillis - $endDateMillis")
 
-                // Total spending
                 val total = expenses.sumOf { it.amount }
                 tvTotalExpenses.text = "Total: ${currencyFormat.format(total)}"
 
-                // Group by category and resolve category names from DB
-                val categoryTotals = expenses
-                    .groupBy { it.categoryId }
-                    .map { (categoryId, grouped) ->
-                        val category = db.categoryDao().getCategoryById(categoryId)
-                        val categoryTotal = grouped.sumOf { it.amount }
-                        val label = if (category != null) {
-                            "${category.emoji} ${category.name}"
-                        } else "Unknown"
-                        "$label: ${currencyFormat.format(categoryTotal)}"
-                    }
+                // Group spending by category
+                val categoryGroups = expenses.groupBy { it.categoryId }
 
-                rvCategoryTotals.adapter = CategoryTotalAdapter(categoryTotals)
+                // Resolve category names and load their budget goals
+                val monthYear = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Date())
+                val categoryLabels = mutableListOf<String>()
+                val barEntries = mutableListOf<BarEntry>()
+                val categoryTotalLines = mutableListOf<String>()
 
-                // Show the expense list; clicking an entry shows its photo if one exists
+                var index = 0f
+                for ((categoryId, grouped) in categoryGroups) {
+                    val category = db.categoryDao().getCategoryById(categoryId)
+                    val spent = grouped.sumOf { it.amount }
+                    val label = if (category != null) "${category.emoji} ${category.name}" else "Unknown"
+
+                    categoryLabels.add(label)
+                    barEntries.add(BarEntry(index, spent.toFloat()))
+                    categoryTotalLines.add("$label: ${currencyFormat.format(spent)}")
+                    index++
+                }
+
+                // Update chart with new data
+                updateBarChart(barEntries, categoryLabels, db, monthYear)
+
+                rvCategoryTotals.adapter = CategoryTotalAdapter(categoryTotalLines)
+
                 rvExpenses.adapter = ExpenseAdapter(expenses) { expense ->
                     handleExpenseClick(expense)
                 }
+
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading reports: ${e.message}")
                 Toast.makeText(requireContext(), "Error loading reports", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    /**
+     * Populates the BarChart with category spending data.
+     * Adds a green LimitLine for the average minimum goal and a red LimitLine for the
+     * average maximum goal so the user can visually see how spending compares to goals.
+     */
+    private suspend fun updateBarChart(
+        entries: List<BarEntry>,
+        labels: List<String>,
+        db: AppDatabase,
+        monthYear: String
+    ) {
+        if (entries.isEmpty()) {
+            barChart.clear()
+            barChart.invalidate()
+            return
+        }
+
+        val dataSet = BarDataSet(entries, "Spending per Category").apply {
+            colors = listOf(
+                Color.parseColor("#2E7D32"),
+                Color.parseColor("#2196F3"),
+                Color.parseColor("#FF9800"),
+                Color.parseColor("#F44336"),
+                Color.parseColor("#9C27B0"),
+                Color.parseColor("#00BCD4"),
+                Color.parseColor("#795548")
+            )
+            valueTextColor = Color.parseColor("#212121")
+            valueTextSize = 10f
+        }
+
+        barChart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+        barChart.xAxis.labelCount = labels.size
+
+        val barData = BarData(dataSet)
+        barData.barWidth = 0.6f
+        barChart.data = barData
+
+        // Load budgets for this month and compute average min/max goals to show as limit lines
+        val budgets = db.budgetDao().getBudgetsForMonthList(currentUserId, monthYear)
+        barChart.axisLeft.removeAllLimitLines()
+
+        if (budgets.isNotEmpty()) {
+            val avgMin = budgets.mapNotNull { it.minGoal.takeIf { v -> v > 0 } }.average()
+            val avgMax = budgets.mapNotNull { it.maxGoal.takeIf { v -> v > 0 } }.average()
+
+            if (avgMin > 0) {
+                val minLine = LimitLine(avgMin.toFloat(), "Min Goal").apply {
+                    lineWidth = 2f
+                    lineColor = Color.parseColor("#4CAF50")
+                    textColor = Color.parseColor("#4CAF50")
+                    textSize = 10f
+                    enableDashedLine(10f, 5f, 0f)
+                }
+                barChart.axisLeft.addLimitLine(minLine)
+            }
+
+            if (avgMax > 0) {
+                val maxLine = LimitLine(avgMax.toFloat(), "Max Goal").apply {
+                    lineWidth = 2f
+                    lineColor = Color.parseColor("#F44336")
+                    textColor = Color.parseColor("#F44336")
+                    textSize = 10f
+                    enableDashedLine(10f, 5f, 0f)
+                }
+                barChart.axisLeft.addLimitLine(maxLine)
+            }
+
+            Log.d(TAG, "Chart limit lines: avgMin=$avgMin, avgMax=$avgMax")
+        }
+
+        barChart.invalidate()
     }
 
     /**

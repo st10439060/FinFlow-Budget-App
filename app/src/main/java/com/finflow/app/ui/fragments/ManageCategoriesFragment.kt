@@ -15,6 +15,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.finflow.app.R
+import com.finflow.app.data.firebase.FirebaseRepository
 import com.finflow.app.data.local.database.AppDatabase
 import com.finflow.app.data.local.entities.Category
 import com.finflow.app.ui.adapters.CategoryAdapter
@@ -118,7 +119,7 @@ class ManageCategoriesFragment : Fragment() {
     }
 
     /**
-     * Inserts a new Category into RoomDB for the current user.
+     * Inserts a new Category into RoomDB for the current user, then mirrors it to Firestore.
      */
     private fun addCategory(name: String, emoji: String, description: String) {
         lifecycleScope.launch {
@@ -136,6 +137,20 @@ class ManageCategoriesFragment : Fragment() {
 
                 val id = db.categoryDao().insertCategory(category)
                 Log.d(TAG, "Category inserted with id=$id")
+
+                // Mirror to Firestore
+                val firebaseRepo = FirebaseRepository()
+                val firestoreData = mapOf(
+                    "id" to id,
+                    "name" to name,
+                    "emoji" to emoji.ifEmpty { "📁" },
+                    "color" to "#4CAF50",
+                    "description" to description,
+                    "userId" to currentUserId,
+                    "createdAt" to System.currentTimeMillis()
+                )
+                firebaseRepo.saveCategory(currentUserId, id, firestoreData)
+                Log.d(TAG, "Category mirrored to Firestore id=$id")
 
                 Toast.makeText(requireContext(), "Category '$name' added!", Toast.LENGTH_SHORT).show()
                 clearForm()
@@ -165,7 +180,13 @@ class ManageCategoriesFragment : Fragment() {
             try {
                 val db = AppDatabase.getDatabase(requireContext())
                 db.categoryDao().deleteCategory(category)
-                Log.d(TAG, "Category deleted: ${category.name}")
+                Log.d(TAG, "Category deleted locally: ${category.name}")
+
+                // Mirror delete to Firestore
+                val firebaseRepo = FirebaseRepository()
+                firebaseRepo.deleteCategory(currentUserId, category.id)
+                Log.d(TAG, "Category deleted from Firestore: ${category.id}")
+
                 Toast.makeText(requireContext(), "'${category.name}' deleted", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Log.e(TAG, "Error deleting category: ${e.message}")

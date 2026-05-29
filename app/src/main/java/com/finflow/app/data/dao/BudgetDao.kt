@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface BudgetDao {
     @Query("SELECT * FROM budgets WHERE userId = :userId AND monthYear = :monthYear")
+    suspend fun getBudgetsForMonthList(userId: Long, monthYear: String): List<Budget>
+
+    @Query("SELECT * FROM budgets WHERE userId = :userId AND monthYear = :monthYear")
     fun getBudgetsForMonth(userId: Long, monthYear: String): Flow<List<Budget>>
 
     @Query("SELECT * FROM budgets WHERE categoryId = :categoryId AND monthYear = :monthYear")

@@ -27,6 +27,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.finflow.app.R
+import com.finflow.app.data.firebase.FirebaseRepository
 import com.finflow.app.data.local.database.AppDatabase
 import com.finflow.app.data.local.entities.Category
 import com.finflow.app.data.local.entities.Expense
@@ -295,11 +296,27 @@ class AddExpenseFragment : Fragment() {
 
         lifecycleScope.launch {
             val db = AppDatabase.getDatabase(requireContext())
-            db.expenseDao().insertExpense(expense)
-            Log.d(TAG, "Expense saved, navigating to dashboard")
+            val newId = db.expenseDao().insertExpense(expense)
+            Log.d(TAG, "Expense saved to RoomDB with id=$newId")
+
+            // Mirror to Firestore so data is stored online
+            val firebaseRepo = FirebaseRepository()
+            val firestoreData = mapOf(
+                "id" to newId,
+                "amount" to amount,
+                "description" to description,
+                "categoryId" to selectedCategoryId,
+                "date" to selectedDate.timeInMillis,
+                "startTime" to startTime,
+                "endTime" to endTime,
+                "userId" to currentUserId,
+                "notes" to notes,
+                "createdAt" to System.currentTimeMillis()
+            )
+            firebaseRepo.saveExpense(currentUserId, newId, firestoreData)
+            Log.d(TAG, "Expense mirrored to Firestore id=$newId")
 
             Toast.makeText(requireContext(), "Expense saved successfully", Toast.LENGTH_SHORT).show()
-            // Navigate back to Dashboard after saving
             findNavController().navigate(R.id.action_addExpense_to_dashboard)
         }
     }

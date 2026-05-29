@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.finflow.app.R
+import com.finflow.app.data.firebase.FirebaseRepository
 import com.finflow.app.data.local.database.AppDatabase
 import com.finflow.app.data.local.entities.Budget
 import com.finflow.app.data.local.entities.Category
@@ -176,7 +177,8 @@ class GoalsFragment : Fragment() {
     }
 
     /**
-     * Creates a Budget record in RoomDB for the selected category and current month.
+     * Creates a Budget record in RoomDB for the selected category and current month,
+     * then mirrors it to Firestore so data is stored online.
      * The monthYear field is in "yyyy-MM" format to allow filtering by month.
      */
     private fun saveBudgetGoal() {
@@ -199,9 +201,25 @@ class GoalsFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val db = AppDatabase.getDatabase(requireContext())
-                db.budgetDao().insertBudget(budget)
+                val newId = db.budgetDao().insertBudget(budget)
 
-                Log.d(TAG, "Budget saved: category=$selectedCategoryId, min=$minGoal, max=$maxGoal, budget=$budgetAmount, month=$monthYear")
+                Log.d(TAG, "Budget saved locally: category=$selectedCategoryId, min=$minGoal, max=$maxGoal, budget=$budgetAmount, month=$monthYear")
+
+                // Mirror to Firestore
+                val firebaseRepo = FirebaseRepository()
+                val firestoreData = mapOf(
+                    "id" to newId,
+                    "categoryId" to selectedCategoryId,
+                    "userId" to currentUserId,
+                    "monthYear" to monthYear,
+                    "budgetAmount" to budgetAmount,
+                    "minGoal" to minGoal,
+                    "maxGoal" to maxGoal,
+                    "createdAt" to System.currentTimeMillis()
+                )
+                firebaseRepo.saveBudget(currentUserId, newId, firestoreData)
+                Log.d(TAG, "Budget mirrored to Firestore id=$newId")
+
                 Toast.makeText(requireContext(), "Budget goal saved successfully", Toast.LENGTH_SHORT).show()
                 clearForm()
             } catch (e: Exception) {

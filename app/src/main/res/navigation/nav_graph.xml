@@ -40,4 +40,9 @@
         android:name="com.finflow.app.ui.fragments.ManageCategoriesFragment"
         android:label="Manage Categories" />
 
+    <fragment
+        android:id="@+id/achievementsFragment"
+        android:name="com.finflow.app.ui.fragments.AchievementsFragment"
+        android:label="Achievements" />
+
 </navigation>
