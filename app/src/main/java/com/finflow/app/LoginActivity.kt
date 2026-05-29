@@ -41,6 +41,9 @@ class LoginActivity : AppCompatActivity() {
 
         Log.d(TAG, "LoginActivity created")
 
+        // Auto-logout if last active more than 30 days ago
+        checkAutoLogout()
+
         etUsername = findViewById(R.id.et_email)
         etPassword = findViewById(R.id.et_password)
         btnLogin = findViewById(R.id.btn_login)
@@ -62,6 +65,12 @@ class LoginActivity : AppCompatActivity() {
             if (isLoginMode) {
                 authViewModel.signIn(username, password)
             } else {
+                val validationError = validatePassword(password)
+                if (validationError != null) {
+                    etPassword.error = validationError
+                    etPassword.requestFocus()
+                    return@setOnClickListener
+                }
                 authViewModel.signUp(username, password)
             }
         }
@@ -113,6 +122,37 @@ class LoginActivity : AppCompatActivity() {
                     progressBar.visibility = View.GONE
                     btnLogin.isEnabled = true
                 }
+            }
+        }
+    }
+
+    /**
+     * Returns null if the password meets requirements, or an error string if it does not.
+     * Requirements: 8+ chars, 1 uppercase, 1 number, 1 special character.
+     */
+    private fun validatePassword(password: String): String? {
+        return when {
+            password.length < 8 -> "Password must be at least 8 characters"
+            !password.any { it.isUpperCase() } -> "Password must contain at least one uppercase letter"
+            !password.any { it.isDigit() } -> "Password must contain at least one number"
+            !password.any { !it.isLetterOrDigit() } -> "Password must contain at least one special character"
+            else -> null
+        }
+    }
+
+    /** Clears the session if the user has not been active for more than 30 days. */
+    private fun checkAutoLogout() {
+        val prefs = getSharedPreferences("finflow_prefs", MODE_PRIVATE)
+        val lastActive = prefs.getLong("last_active_timestamp", 0L)
+        if (lastActive > 0L) {
+            val daysSince = (System.currentTimeMillis() - lastActive) / (1000L * 60 * 60 * 24)
+            if (daysSince >= 30) {
+                prefs.edit()
+                    .remove("current_user_id")
+                    .remove("last_active_timestamp")
+                    .apply()
+                Log.d(TAG, "Auto-logout: $daysSince days since last activity")
+                Toast.makeText(this, "Session expired. Please log in again.", Toast.LENGTH_LONG).show()
             }
         }
     }

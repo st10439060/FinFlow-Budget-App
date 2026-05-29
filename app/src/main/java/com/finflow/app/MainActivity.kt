@@ -16,6 +16,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Update last-active timestamp so auto-logout timer resets on each app open
+        getSharedPreferences("finflow_prefs", MODE_PRIVATE)
+            .edit().putLong("last_active_timestamp", System.currentTimeMillis()).apply()
+
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController

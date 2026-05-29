@@ -1,6 +1,7 @@
 package com.finflow.app.ui.fragments
 
 import android.app.Activity
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -40,6 +41,7 @@ class ManageCategoriesFragment : Fragment() {
 
     private lateinit var categoryAdapter: CategoryAdapter
     private var currentUserId: Long = 1L
+    private var selectedColor: String = "#4CAF50"
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,6 +60,7 @@ class ManageCategoriesFragment : Fragment() {
 
         initializeViews(view)
         setupRecyclerView()
+        setupColorPicker(view)
         setupAddButton()
         loadCategories()
     }
@@ -98,6 +101,26 @@ class ManageCategoriesFragment : Fragment() {
         }
     }
 
+    private fun setupColorPicker(view: View) {
+        val swatchIds = listOf(
+            R.id.swatch_red to "#F44336",
+            R.id.swatch_orange to "#FF9800",
+            R.id.swatch_yellow to "#FFC107",
+            R.id.swatch_green to "#4CAF50",
+            R.id.swatch_teal to "#009688",
+            R.id.swatch_blue to "#2196F3",
+            R.id.swatch_brown to "#795548"
+        )
+        val selectedPreview = view.findViewById<View>(R.id.view_selected_color)
+
+        for ((id, hex) in swatchIds) {
+            view.findViewById<View>(id)?.setOnClickListener {
+                selectedColor = hex
+                selectedPreview.setBackgroundColor(Color.parseColor(hex))
+            }
+        }
+    }
+
     private fun setupAddButton() {
         btnAddCategory.setOnClickListener {
             val name = etCategoryName.text.toString().trim()
@@ -129,7 +152,7 @@ class ManageCategoriesFragment : Fragment() {
                 val category = Category(
                     name = name,
                     emoji = emoji.ifEmpty { "📁" },
-                    color = "#4CAF50",
+                    color = selectedColor,
                     description = description,
                     userId = currentUserId,
                     sortOrder = 99
@@ -144,7 +167,7 @@ class ManageCategoriesFragment : Fragment() {
                     "id" to id,
                     "name" to name,
                     "emoji" to emoji.ifEmpty { "📁" },
-                    "color" to "#4CAF50",
+                    "color" to selectedColor,
                     "description" to description,
                     "userId" to currentUserId,
                     "createdAt" to System.currentTimeMillis()

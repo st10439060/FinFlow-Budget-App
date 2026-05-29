@@ -1,7 +1,13 @@
 package com.finflow.app.ui.fragments
 
+import android.Manifest
 import android.app.Activity
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -10,6 +16,9 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -32,15 +41,14 @@ import java.util.*
 
 /**
  * DashboardFragment - shows monthly budget summary, per-category spending progress,
- * and a goal compliance card that visually shows whether spending over the past month
- * stayed within the user's minimum and maximum goals per category.
- *
- * Satisfies Part 3: "display in a visual format how well the user is doing with staying
- * between their minimum and maximum spending goals over the past month"
+ * and goal compliance. Sends notifications when spending hits 90% or 100% of a
+ * category's maximum goal.
  */
 class DashboardFragment : Fragment() {
 
     private val TAG = "DashboardFragment"
+    private val CHANNEL_ID = "budget_alerts"
+    private val PREFS_NOTIF = "finflow_notif_prefs"
 
     private lateinit var viewModel: DashboardViewModel
     private lateinit var categoryAdapter: CategoryProgressAdapter
@@ -62,6 +70,8 @@ class DashboardFragment : Fragment() {
         loadCurrentUserId()
         Log.d(TAG, "Dashboard loaded for userId=$userId")
 
+        createNotificationChannel()
+
         val database = AppDatabase.getDatabase(requireContext())
         val repository = FinFlowRepository(
             database.categoryDao(),
@@ -76,7 +86,6 @@ class DashboardFragment : Fragment() {
             DashboardViewModelFactory(repository)
         )[DashboardViewModel::class.java]
 
-        // Seed default categories for this user if they have none yet
         CoroutineScope(Dispatchers.IO).launch {
             repository.initializeDefaultCategories(userId)
         }
@@ -86,7 +95,6 @@ class DashboardFragment : Fragment() {
         loadGoalCompliance(view)
     }
 
-    /** Reads the saved user ID from SharedPreferences written at login time. */
     private fun loadCurrentUserId() {
         val sharedPref = requireContext().getSharedPreferences("finflow_prefs", Activity.MODE_PRIVATE)
         userId = sharedPref.getLong("current_user_id", 1L)
@@ -129,12 +137,8 @@ class DashboardFragment : Fragment() {
     }
 
     /**
-     * Builds the goal compliance section dynamically.
-     * For each category that has a budget with min/max goals set this month, it shows:
-     *  - Category name
-     *  - Amount spent vs min/max range
-     *  - A colored status: UNDER / ON TRACK / OVER
-     * This gives the user an instant visual of how well they are staying within goals.
+     * Builds the goal compliance section and fires budget alert notifications when
+     * a category's spending reaches 90% or 100% of its max goal.
      */
     private fun loadGoalCompliance(view: View) {
         val complianceContainer = view.findViewById<LinearLayout>(R.id.compliance_container)
@@ -180,7 +184,11 @@ class DashboardFragment : Fragment() {
 
                     val categoryName = if (category != null) "${category.emoji} ${category.name}" else "Category"
 
-                    // Determine compliance status
+                    // Check and send budget alert notifications
+                    if (budget.maxGoal > 0) {
+                        checkBudgetAlert(categoryName, budget.categoryId, spent, budget.maxGoal, monthYear)
+                    }
+
                     val (statusText, statusColor, bgColor) = when {
                         budget.maxGoal > 0 && spent > budget.maxGoal ->
                             Triple("OVER BUDGET", "#F44336", "#FFEBEE")
@@ -190,9 +198,6 @@ class DashboardFragment : Fragment() {
                             Triple("ON TRACK", "#2E7D32", "#E8F5E9")
                     }
 
-                    Log.d(TAG, "Compliance for $categoryName: spent=$spent, min=${budget.minGoal}, max=${budget.maxGoal}, status=$statusText")
-
-                    // Build a compliance row card
                     val cardView = MaterialCardView(requireContext()).apply {
                         radius = 8f
                         cardElevation = 2f
@@ -248,6 +253,70 @@ class DashboardFragment : Fragment() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading goal compliance: ${e.message}")
             }
+        }
+    }
+
+    /**
+     * Fires a notification if spending is at 90% or 100%+ of the max goal.
+     * Uses a prefs key to avoid repeating the same alert in the same month.
+     */
+    private fun checkBudgetAlert(categoryName: String, categoryId: Long, spent: Double, maxGoal: Double, monthYear: String) {
+        val pct = (spent / maxGoal) * 100
+        val prefs = requireContext().getSharedPreferences(PREFS_NOTIF, Context.MODE_PRIVATE)
+
+        if (pct >= 100.0) {
+            val key = "over_${categoryId}_$monthYear"
+            if (!prefs.getBoolean(key, false)) {
+                sendNotification(
+                    id = (categoryId * 10 + 2).toInt(),
+                    title = "Over Budget: $categoryName",
+                    message = "You've exceeded your max goal of ${currencyFormat.format(maxGoal)}!"
+                )
+                prefs.edit().putBoolean(key, true).apply()
+                Log.d(TAG, "Notification: OVER BUDGET for $categoryName")
+            }
+        } else if (pct >= 90.0) {
+            val key = "warn_${categoryId}_$monthYear"
+            if (!prefs.getBoolean(key, false)) {
+                sendNotification(
+                    id = (categoryId * 10 + 1).toInt(),
+                    title = "Budget Warning: $categoryName",
+                    message = "You've used ${pct.toInt()}% of your max goal (${currencyFormat.format(maxGoal)})."
+                )
+                prefs.edit().putBoolean(key, true).apply()
+                Log.d(TAG, "Notification: 90% WARNING for $categoryName")
+            }
+        }
+    }
+
+    private fun sendNotification(id: Int, title: String, message: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) return
+        }
+
+        val notification = NotificationCompat.Builder(requireContext(), CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+
+        NotificationManagerCompat.from(requireContext()).notify(id, notification)
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Budget Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Alerts when spending approaches or exceeds budget goals"
+            }
+            val notifManager = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notifManager.createNotificationChannel(channel)
         }
     }
 }

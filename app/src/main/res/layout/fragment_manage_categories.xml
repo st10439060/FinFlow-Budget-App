@@ -88,6 +88,56 @@
                     android:lines="2" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Color picker row -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Category Color"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/ll_color_picker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <View android:id="@+id/swatch_red"    android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="8dp" android:background="#F44336" />
+                <View android:id="@+id/swatch_orange" android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="8dp" android:background="#FF9800" />
+                <View android:id="@+id/swatch_yellow" android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="8dp" android:background="#FFC107" />
+                <View android:id="@+id/swatch_green"  android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="8dp" android:background="#4CAF50" />
+                <View android:id="@+id/swatch_teal"   android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="8dp" android:background="#009688" />
+                <View android:id="@+id/swatch_blue"   android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="8dp" android:background="#2196F3" />
+                <View android:id="@+id/swatch_brown"  android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="8dp" android:background="#795548" />
+
+            </LinearLayout>
+
+            <!-- Selected color preview -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Selected: "
+                    android:textSize="13sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_gravity="center_vertical" />
+
+                <View
+                    android:id="@+id/view_selected_color"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="#4CAF50"
+                    android:layout_gravity="center_vertical" />
+
+            </LinearLayout>
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_add_category"
                 android:layout_width="match_parent"
