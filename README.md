@@ -18,7 +18,7 @@ The application is designed for individuals requiring a solution which is simple
 
 ---
 
-## Own Features (Documented for Marking)
+## Own Features
 
 ### Own Feature 1: Achievements System
 
@@ -37,6 +37,8 @@ The earned points progress into a level progression system from Beginner to Lege
 
 **Where to find it:** Tap the star icon in the bottom navigation bar.
 
+<img width="149" height="325" alt="Achievements" src="https://github.com/user-attachments/assets/939eab94-0dfd-443b-8d41-90c8411ec8f0" />
+
 ---
 
 ### Own Feature 2: Photo Receipt Attachment
@@ -48,6 +50,10 @@ From Report screen, user will see a picture view of the receipt when he taps the
 For photo attachment, Android's FileProvider API was used for security reasons â€“ no exposed file paths.
 
 **Where to find it:** "Add Photo" button on the Add Expense screen. View receipts by tapping expense entries in Reports.
+
+<img width="159" height="209" alt="add photo1" src="https://github.com/user-attachments/assets/8cdeb179-55d1-4b33-9f76-d67e86394b7b" />
+<img width="148" height="290" alt="add photo2" src="https://github.com/user-attachments/assets/a56e18f1-13eb-414d-9d0a-e5bd1c1a35d9" />
+<img width="149" height="320" alt="add photo3" src="https://github.com/user-attachments/assets/4968adef-b11e-4f68-815a-f9964d3aeee8" />
 
 ---
 
@@ -61,6 +67,9 @@ For photo attachment, Android's FileProvider API was used for security reasons â
 - Progress indicator shows while the app is authenticating
 - Full back-stack is cleared on login success so the user can't navigate back to the login screen
 
+<img width="157" height="324" alt="Screenshot 2026-06-03 114421" src="https://github.com/user-attachments/assets/78bee4e7-e05e-4a06-bab1-7e21e81f5b90" />
+
+
 ### Dashboard
 - Shows monthly budget total, amount spent, and remaining balance
 - Progress bar showing what percentage of the budget has been used
@@ -68,11 +77,17 @@ For photo attachment, Android's FileProvider API was used for security reasons â
 - Goal Compliance cards dynamically generated per category: ON TRACK (green), UNDER MIN (orange), OVER BUDGET (red) â€” shows actual spending vs min/max range in ZAR
 - Push notifications fire at 90% and 100% of a category's max goal, deduplicated per month
 
+<img width="154" height="323" alt="Screenshot 2026-06-03 114536" src="https://github.com/user-attachments/assets/a277fba6-151d-4533-b116-9364b50d3e10" />
+
+
 ### Add Expense
 - Fields: amount, description, notes, category dropdown (live, updates when new categories are created), date picker (defaults to today), start and end time pickers (24-hour format)
 - Photo attachment via camera (Own Feature 2)
 - Full input validation with Toast error messages
 - Saves to Room and mirrors to Firebase Firestore
+
+<img width="149" height="322" alt="add expense" src="https://github.com/user-attachments/assets/129b52e4-58e2-4202-983f-4ba3b8638280" />
+
 
 ### Reports
 - Date selector slider (by default the last 30 days)
@@ -84,6 +99,9 @@ For photo attachment, Android's FileProvider API was used for security reasons â
 - Export as CSV file stored in Downloads folder, columns: Date, Description, Category, Amount, Notes
 - Totals list by category and total expenditure in ZAR displayed under graphs
 
+<img width="150" height="326" alt="Expense reports" src="https://github.com/user-attachments/assets/b0b36d6f-13d4-4077-b91c-174286ea7d28" />
+
+
 ### Goals
 - Choose a category and set minimum goal, maximum cap and target budget using three SeekBars
 - Range for all three SeekBars: R0 to R10,000
@@ -91,11 +109,16 @@ For photo attachment, Android's FileProvider API was used for security reasons â
 - Ensures minimum value isnâ€™t larger than maximum value when saving
 - Saved to Room and Firestore
 
+<img width="149" height="323" alt="set monthly budget goal" src="https://github.com/user-attachments/assets/15e722b1-9f65-45e7-ac27-5b1c68658088" />
+
 ### Manage Categories
 - Create a category by providing name, an optional emoji and description
 - User chooses one of 7 colours available (Red, Orange, Yellow, Green, Teal, Blue and Brown)
 - Deleting categories via confirmation dialog
 - List shown in RealTime Recycler View
+
+<img width="148" height="322" alt="Manage categories" src="https://github.com/user-attachments/assets/0546202f-1237-4846-9583-b77b653c96f1" />
+
 
 ### Achievements (Custom Feature 1)
 - 4 badges with an emoji, title, description, point and unlock date
@@ -104,11 +127,17 @@ For photo attachment, Android's FileProvider API was used for security reasons â
 - Daily streak count based on number of consecutive days with recorded spending
 - Saved to Room and Firestore
 
+<img width="149" height="325" alt="Achievements" src="https://github.com/user-attachments/assets/cae5b035-5d40-4da1-870d-0006163a8ef8" />
+
+
 ### Profile
 - Displays username
 - Lifetime stats: total expenses logged, category count, total amount spent
 - Manage Categories shortcut button
 - Logout clears session and returns to Login screen
+
+<img width="151" height="322" alt="Profile" src="https://github.com/user-attachments/assets/42294e48-c4ef-4f4f-b5b7-288db5bec18b" />
+
 
 ---
 
